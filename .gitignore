@@ -2,6 +2,15 @@
 *.exe
 *.zip
 
+# makepkg build artifacts (packaging/aur/) -- only PKGBUILD, .SRCINFO,
+# *.install and README.md are tracked; repo/ (the published binary repo)
+# is tracked on purpose and lives at the repo root, not here.
+packaging/aur/src/
+packaging/aur/pkg/
+packaging/aur/readym-wukong-linux*/
+packaging/aur/*.pkg.tar.*
+packaging/aur/*.log
+
 # editor / OS cruft
 *~
 .DS_Store

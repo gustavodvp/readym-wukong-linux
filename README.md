@@ -34,19 +34,47 @@ separate Wine prefix.
 
 ## Install
 
-### Arch Linux / AUR
+### Arch Linux — plain `pacman` (no AUR helper)
+
+`pacman` itself only ever talks to configured repos, never the AUR — so this
+project also publishes a tiny, unsigned repo of its own straight out of this
+git repo, updated by [`packaging/repo/update-repo.sh`](packaging/repo/update-repo.sh).
+Add it once to `/etc/pacman.conf` (anywhere in the repo list, e.g. right
+after `[core]`):
+
+```ini
+[readym-wukong-linux]
+SigLevel = Optional TrustAll
+Server = https://raw.githubusercontent.com/gustavodvp/readym-wukong-linux/main/repo
+```
+
+Then:
+
+```bash
+sudo pacman -Sy
+sudo pacman -S readym-wukong-linux-git
+```
+
+> `SigLevel = Optional TrustAll` means packages from this repo aren't GPG-signed —
+> fine for a small personal repo, just know pacman isn't verifying authenticity here.
+> If that's not acceptable to you, use the AUR package below instead (same
+> content, built locally by `makepkg` on your machine).
+
+### Arch Linux / AUR (via `yay`/`paru`)
 
 ```bash
 yay -S readym-wukong-linux-git      # or: paru -S readym-wukong-linux-git
 ```
 
-then, once (download the launcher installer from <https://portal.ready.mp> first):
+### After either Arch install
+
+Once, after downloading the launcher installer from <https://portal.ready.mp>:
 
 ```bash
 readym-wukong-setup --installer ~/Downloads/ReadyM.Launcher-stable-Setup.exe
 ```
 
-`pacman` installs the commands and desktop entries system-wide;
+`pacman` only installs the commands and desktop entries system-wide;
 `readym-wukong-setup` does the part that has to happen per user — writing into
 *your* Steam library's Proton prefix and registering the login callback for
 *your* account. Re-run it any time (e.g. after a launcher update); it's
@@ -168,8 +196,10 @@ the script prints how to remove that too.
 
 ## Packaging
 
-The AUR `-git` package lives in [`packaging/aur/`](packaging/aur/) — see its
-[README](packaging/aur/README.md) for how to build or publish it.
+- [`packaging/aur/`](packaging/aur/) — the AUR `-git` package (`PKGBUILD` + `.SRCINFO`).
+- [`packaging/repo/`](packaging/repo/) — `update-repo.sh`, which rebuilds that
+  package and refreshes the self-hosted `repo/` pacman repository used by the
+  plain-`pacman` install path above.
 
 ## Credits & license
 

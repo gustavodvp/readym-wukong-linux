@@ -1,6 +1,6 @@
 # Maintainer: gustavodvp <guzahard@gmail.com>
 pkgname=readym-wukong-linux-git
-pkgver=r1.0000000
+pkgver=r6.09119cf
 pkgrel=1
 pkgdesc="Play Black Myth: Wukong multiplayer (WukongMP / ReadyM) on Linux via Proton"
 arch=('any')
