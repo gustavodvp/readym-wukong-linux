@@ -124,6 +124,7 @@ Then players connect to `your-host:9050`.
 | **Game opens then closes after a few seconds** | `steam_appid.txt` missing from `b1/Binaries/Win64/`. Re-run `install.sh`. A Steam *"Verify integrity of game files"* deletes it — re-run afterwards. |
 | **"ReadyM Launcher não está instalado no prefixo"** | You haven't run `install.sh`, or the game is on a different Steam library that changed. Re-run `install.sh`. |
 | **protontricks is the Flatpak version and can't see the game** | Grant it access: `flatpak override --user --filesystem=~/.local/share/Steam com.github.Matoking.protontricks` — or install native `protontricks`. |
+| **On a tiling WM (Hyprland/Sway/i3): the launcher window is cropped, buttons seem unresponsive / cut off** | Proton tags the window with a generic "game" content hint (X11 class `steam_proton`), so a "put game windows in a tiled workspace" rule can catch the *launcher* too and squeeze it into a tile. Force it to float, e.g. in Hyprland (`~/.config/hypr/…`): `windowrulev2 = float, title:^(ReadyM Launcher.*)$` (plus a `size`/`center` rule if you want). Close and reopen the launcher after adding the rule. |
 | **Bad performance** | The game runs inside the launcher's `protontricks-launch` session, so Steam launch options (gamemode, MangoHud, gamescope) don't apply. This is a known limitation of v1. |
 
 Logs worth checking:
