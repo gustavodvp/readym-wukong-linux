@@ -27,6 +27,7 @@ BINDIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
 APPDIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 ICONDIR="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/256x256/apps"
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SELF_NAME="$(basename "${BASH_SOURCE[0]}")"
 
 c_ok=$'\033[32m'; c_warn=$'\033[33m'; c_err=$'\033[31m'; c_dim=$'\033[2m'; c_off=$'\033[0m'
 say()  { printf '%s==>%s %s\n'  "$c_ok"   "$c_off" "$*"; }
@@ -109,7 +110,7 @@ ${c_err}Instalador do ReadyM Launcher não encontrado.${c_off}
   1. Baixe em:  https://portal.ready.mp   (faça login → download do Launcher)
   2. Rode de novo apontando o arquivo:
 
-       ./install.sh --installer ~/Downloads/ReadyM.Launcher-stable-Setup.exe
+       $SELF_NAME --installer ~/Downloads/ReadyM.Launcher-stable-Setup.exe
 
 MSG
   exit 1
@@ -163,23 +164,32 @@ printf '%s' "$APPID" > "$GAME_DIR/b1/Binaries/Win64/steam_appid.txt"
 printf '%s' "$APPID" > "$GAME_DIR/steam_appid.txt"
 
 # 4) comandos + atalhos ---------------------------------------------------------
-say "Instalando 'readym-wukong' e 'readym-uri-handler' em $BINDIR"
-mkdir -p "$BINDIR" "$APPDIR" "$ICONDIR"
-install -m 0755 "$SELF_DIR/bin/readym-wukong"      "$BINDIR/readym-wukong"
-install -m 0755 "$SELF_DIR/bin/readym-uri-handler" "$BINDIR/readym-uri-handler"
+# Quando este script roda de um checkout do git (tem bin/ e share/ ao lado),
+# ele mesmo instala os comandos e os .desktop no diretório do usuário.
+# Quando roda a partir de um pacote (AUR/pacman), esses arquivos já foram
+# colocados em /usr pelo próprio pacote — não há nada a copiar aqui, só o
+# passo 5 (associação por-usuário do esquema readym://) ainda é necessário.
+if [ -f "$SELF_DIR/bin/readym-wukong" ]; then
+  say "Instalando 'readym-wukong' e 'readym-uri-handler' em $BINDIR"
+  mkdir -p "$BINDIR" "$APPDIR" "$ICONDIR"
+  install -m 0755 "$SELF_DIR/bin/readym-wukong"      "$BINDIR/readym-wukong"
+  install -m 0755 "$SELF_DIR/bin/readym-uri-handler" "$BINDIR/readym-uri-handler"
 
-# ícone (extraído do próprio launcher, se disponível)
-LOGO="$PREFIX/drive_c/users/steamuser/AppData/Local/ReadyM.Launcher/current/Assets/readym_logo.png"
-[ -f "$LOGO" ] && install -m 0644 "$LOGO" "$ICONDIR/readym-wukong.png" || true
+  # ícone (extraído do próprio launcher, se disponível)
+  LOGO="$PREFIX/drive_c/users/steamuser/AppData/Local/ReadyM.Launcher/current/Assets/readym_logo.png"
+  [ -f "$LOGO" ] && install -m 0644 "$LOGO" "$ICONDIR/readym-wukong.png" || true
 
-sed -e "s|@BIN@|$BINDIR|g" "$SELF_DIR/share/applications/readym-wukong.desktop" \
-    > "$APPDIR/readym-wukong.desktop"
-sed -e "s|@BIN@|$BINDIR|g" "$SELF_DIR/share/applications/readym-uri-handler.desktop" \
-    > "$APPDIR/readym-uri-handler.desktop"
+  sed -e "s|@BIN@|$BINDIR|g" "$SELF_DIR/share/applications/readym-wukong.desktop" \
+      > "$APPDIR/readym-wukong.desktop"
+  sed -e "s|@BIN@|$BINDIR|g" "$SELF_DIR/share/applications/readym-uri-handler.desktop" \
+      > "$APPDIR/readym-uri-handler.desktop"
+  update-desktop-database "$APPDIR" >/dev/null 2>&1 || true
+else
+  say "Comandos e atalhos já vieram pelo pacote — nada a copiar"
+fi
 
-# 5) registra o esquema readym:// --------------------------------------------------
+# 5) registra o esquema readym:// (sempre por-usuário, mesmo empacotado) -----------
 say "Registrando o esquema readym:// (callback do login)"
-update-desktop-database "$APPDIR" >/dev/null 2>&1 || true
 xdg-mime default readym-uri-handler.desktop x-scheme-handler/readym
 
 # ------------------------------------------------------------------ done -------

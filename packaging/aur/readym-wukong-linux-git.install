@@ -1,0 +1,24 @@
+post_install() {
+	cat <<'MSG'
+==> readym-wukong-linux installed. One-time per-user setup still needed:
+==>
+==>   1. Download the ReadyM Launcher installer (needs a free account):
+==>        https://portal.ready.mp
+==>   2. readym-wukong-setup --installer ~/Downloads/ReadyM.Launcher-stable-Setup.exe
+==>
+==> Then just run:  readym-wukong   (or the "ReadyM Launcher" app menu entry)
+==> Docs: /usr/share/doc/readym-wukong-linux-git/README.md
+MSG
+}
+
+post_upgrade() {
+	post_install
+}
+
+pre_remove() {
+	cat <<'MSG'
+==> Removing the package only removes the system-wide commands.
+==> Run 'readym-wukong-remove' first if you also want to clean up the
+==> per-user readym:// association and steam_appid.txt files it created.
+MSG
+}

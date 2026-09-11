@@ -1,0 +1,47 @@
+# Maintainer: gustavodvp <guzahard@gmail.com>
+pkgname=readym-wukong-linux-git
+pkgver=r1.0000000
+pkgrel=1
+pkgdesc="Play Black Myth: Wukong multiplayer (WukongMP / ReadyM) on Linux via Proton"
+arch=('any')
+url="https://github.com/gustavodvp/readym-wukong-linux"
+license=('MIT')
+depends=('protontricks' 'xdg-utils' 'bash')
+optdepends=('steam: to own and run Black Myth: Wukong')
+provides=('readym-wukong-linux')
+conflicts=('readym-wukong-linux')
+makedepends=('git')
+source=("${pkgname}::git+${url}.git")
+sha256sums=('SKIP')
+install="${pkgname}.install"
+
+pkgver() {
+  cd "$pkgname"
+  printf 'r%s.%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+package() {
+  cd "$pkgname"
+
+  install -Dm755 bin/readym-wukong      "$pkgdir/usr/bin/readym-wukong"
+  install -Dm755 bin/readym-uri-handler "$pkgdir/usr/bin/readym-uri-handler"
+  # install.sh / uninstall.sh only do the per-user, per-machine parts once
+  # installed as a package (writing into *your* Steam library's Proton
+  # prefix, registering the readym:// scheme for *your* user) — everything
+  # that is safe to ship system-wide is already placed by this package() step.
+  install -Dm755 install.sh             "$pkgdir/usr/bin/readym-wukong-setup"
+  install -Dm755 uninstall.sh           "$pkgdir/usr/bin/readym-wukong-remove"
+
+  install -Dm644 share/applications/readym-wukong.desktop \
+                 "$pkgdir/usr/share/applications/readym-wukong.desktop"
+  install -Dm644 share/applications/readym-uri-handler.desktop \
+                 "$pkgdir/usr/share/applications/readym-uri-handler.desktop"
+  # the desktop files use @BIN@/<cmd> so the per-user install.sh can point at
+  # ~/.local/bin; for the packaged commands (always on PATH via /usr/bin)
+  # that prefix is simply dropped.
+  sed -i 's|@BIN@/||g' "$pkgdir"/usr/share/applications/*.desktop
+
+  install -Dm644 LICENSE               "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md             "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 docs/HOW-IT-WORKS.md  "$pkgdir/usr/share/doc/$pkgname/HOW-IT-WORKS.md"
+}
