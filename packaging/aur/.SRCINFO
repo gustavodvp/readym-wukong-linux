@@ -1,0 +1,19 @@
+pkgbase = readym-wukong-linux-git
+	pkgdesc = Play Black Myth: Wukong multiplayer (WukongMP / ReadyM) on Linux via Proton
+	pkgver = r1.0000000
+	pkgrel = 1
+	url = https://github.com/gustavodvp/readym-wukong-linux
+	install = readym-wukong-linux-git.install
+	arch = any
+	license = MIT
+	makedepends = git
+	depends = protontricks
+	depends = xdg-utils
+	depends = bash
+	optdepends = steam: to own and run Black Myth: Wukong
+	provides = readym-wukong-linux
+	conflicts = readym-wukong-linux
+	source = readym-wukong-linux-git::git+https://github.com/gustavodvp/readym-wukong-linux.git
+	sha256sums = SKIP
+
+pkgname = readym-wukong-linux-git

@@ -34,6 +34,26 @@ separate Wine prefix.
 
 ## Install
 
+### Arch Linux / AUR
+
+```bash
+yay -S readym-wukong-linux-git      # or: paru -S readym-wukong-linux-git
+```
+
+then, once (download the launcher installer from <https://portal.ready.mp> first):
+
+```bash
+readym-wukong-setup --installer ~/Downloads/ReadyM.Launcher-stable-Setup.exe
+```
+
+`pacman` installs the commands and desktop entries system-wide;
+`readym-wukong-setup` does the part that has to happen per user — writing into
+*your* Steam library's Proton prefix and registering the login callback for
+*your* account. Re-run it any time (e.g. after a launcher update); it's
+idempotent. `readym-wukong-remove` undoes the per-user part later if needed.
+
+### Anywhere else (git clone, no root)
+
 ```bash
 git clone https://github.com/<you>/readym-wukong-linux
 cd readym-wukong-linux
@@ -41,10 +61,9 @@ cd readym-wukong-linux
 ```
 
 If the installer `.exe` is in `~/Downloads` or next to `install.sh`, you can
-omit `--installer` and it will be found automatically.
-
-The script is **idempotent** — re-run it any time (e.g. after a launcher
-update) without harm.
+omit `--installer` and it will be found automatically. Same script, same
+idempotency, just installs the commands into `~/.local/bin` instead of
+`/usr/bin` — no `sudo` involved.
 
 <details>
 <summary>What <code>install.sh</code> actually does</summary>
@@ -137,7 +156,8 @@ Logs worth checking:
 ## Uninstall
 
 ```bash
-./uninstall.sh
+./uninstall.sh              # git-clone install
+readym-wukong-remove        # AUR install (then: sudo pacman -R readym-wukong-linux-git)
 ```
 
 Removes the commands, desktop entries, the `readym://` association and the
@@ -145,6 +165,11 @@ Removes the commands, desktop entries, the `readym://` association and the
 the script prints how to remove that too.
 
 ---
+
+## Packaging
+
+The AUR `-git` package lives in [`packaging/aur/`](packaging/aur/) — see its
+[README](packaging/aur/README.md) for how to build or publish it.
 
 ## Credits & license
 

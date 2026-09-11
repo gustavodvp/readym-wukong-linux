@@ -171,13 +171,9 @@ printf '%s' "$APPID" > "$GAME_DIR/steam_appid.txt"
 # passo 5 (associação por-usuário do esquema readym://) ainda é necessário.
 if [ -f "$SELF_DIR/bin/readym-wukong" ]; then
   say "Instalando 'readym-wukong' e 'readym-uri-handler' em $BINDIR"
-  mkdir -p "$BINDIR" "$APPDIR" "$ICONDIR"
+  mkdir -p "$BINDIR" "$APPDIR"
   install -m 0755 "$SELF_DIR/bin/readym-wukong"      "$BINDIR/readym-wukong"
   install -m 0755 "$SELF_DIR/bin/readym-uri-handler" "$BINDIR/readym-uri-handler"
-
-  # ícone (extraído do próprio launcher, se disponível)
-  LOGO="$PREFIX/drive_c/users/steamuser/AppData/Local/ReadyM.Launcher/current/Assets/readym_logo.png"
-  [ -f "$LOGO" ] && install -m 0644 "$LOGO" "$ICONDIR/readym-wukong.png" || true
 
   sed -e "s|@BIN@|$BINDIR|g" "$SELF_DIR/share/applications/readym-wukong.desktop" \
       > "$APPDIR/readym-wukong.desktop"
@@ -187,6 +183,12 @@ if [ -f "$SELF_DIR/bin/readym-wukong" ]; then
 else
   say "Comandos e atalhos já vieram pelo pacote — nada a copiar"
 fi
+
+# Ícone: só existe depois que o launcher está instalado no prefixo, então
+# extraímos por-usuário sempre (git checkout ou pacote, tanto faz).
+mkdir -p "$ICONDIR"
+LOGO="$PREFIX/drive_c/users/steamuser/AppData/Local/ReadyM.Launcher/current/Assets/readym_logo.png"
+[ -f "$LOGO" ] && install -m 0644 "$LOGO" "$ICONDIR/readym-wukong.png"
 
 # 5) registra o esquema readym:// (sempre por-usuário, mesmo empacotado) -----------
 say "Registrando o esquema readym:// (callback do login)"
