@@ -1,0 +1,7 @@
+# the launcher installer is downloaded by each user from portal.ready.mp
+*.exe
+*.zip
+
+# editor / OS cruft
+*~
+.DS_Store

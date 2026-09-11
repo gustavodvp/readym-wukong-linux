@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# readym-wukong — start the ReadyM Launcher inside Black Myth: Wukong's Proton
+# prefix. The launcher then downloads the WukongMP mods, injects the loader and
+# starts the game itself (in the same prefix), which connects to the server.
+#
+# Installed by install.sh. Safe to run directly.
+#
+set -euo pipefail
+
+APPID=2358720
+LAUNCHER_EXE_REL='drive_c/users/steamuser/AppData/Local/ReadyM.Launcher/current/ReadyM.Launcher.exe'
+
+die() { printf 'readym-wukong: %s\n' "$*" >&2; exit 1; }
+
+# --- protontricks ------------------------------------------------------------
+PT_LAUNCH=()
+if command -v protontricks-launch >/dev/null 2>&1; then
+  PT_LAUNCH=(protontricks-launch)
+elif flatpak info com.github.Matoking.protontricks >/dev/null 2>&1; then
+  PT_LAUNCH=(flatpak run --command=protontricks-launch com.github.Matoking.protontricks)
+else
+  die "protontricks não encontrado (instale o pacote 'protontricks')."
+fi
+
+# --- locate the game's Proton prefix --------------------------------------------
+STEAM_ROOT=""
+for d in "$HOME/.steam/steam" "$HOME/.local/share/Steam" "$HOME/.steam/root" \
+         "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam"; do
+  [ -f "$d/steamapps/libraryfolders.vdf" ] && { STEAM_ROOT="$d"; break; }
+done
+[ -n "$STEAM_ROOT" ] || die "instalação do Steam não encontrada."
+
+PREFIX=""
+LIBS=$(printf '%s\n' "$STEAM_ROOT"
+       grep -oE '"path"[[:space:]]*"[^"]+"' "$STEAM_ROOT/steamapps/libraryfolders.vdf" 2>/dev/null \
+         | sed -E 's/.*"([^"]+)"$/\1/')
+while IFS= read -r cand; do
+  [ -n "$cand" ] || continue
+  if [ -f "$cand/steamapps/compatdata/${APPID}/pfx/$LAUNCHER_EXE_REL" ]; then
+    PREFIX="$cand/steamapps/compatdata/${APPID}/pfx"; break
+  fi
+done <<EOF
+$LIBS
+EOF
+[ -n "$PREFIX" ] || die "ReadyM Launcher não está instalado no prefixo. Rode ./install.sh primeiro."
+
+EXE="$PREFIX/$LAUNCHER_EXE_REL"
+
+# --- sanity ------------------------------------------------------------------
+pgrep -x steam >/dev/null 2>&1 \
+  || echo "readym-wukong: aviso — o Steam não parece estar aberto (necessário p/ autenticar o jogo)." >&2
+
+if pgrep -f "$LAUNCHER_EXE_REL" >/dev/null 2>&1; then
+  echo "readym-wukong: o ReadyM Launcher já está em execução."
+  exit 0
+fi
+
+exec "${PT_LAUNCH[@]}" --appid "$APPID" "$EXE"

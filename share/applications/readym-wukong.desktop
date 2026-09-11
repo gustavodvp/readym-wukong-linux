@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=ReadyM Launcher (Black Myth: Wukong)
+GenericName=WukongMP multiplayer launcher
+Comment=Play Black Myth: Wukong co-op / PvP through the ReadyM platform
+Exec=@BIN@/readym-wukong
+Icon=readym-wukong
+Terminal=false
+Categories=Game;
+StartupNotify=true
+Keywords=wukong;wukongmp;readym;multiplayer;coop;

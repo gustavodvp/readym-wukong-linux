@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# readym-uri-handler — receives a  readym://oauth/callback?...  URL from the
+# system browser and hands it to the ReadyM Launcher that is already running
+# inside Black Myth: Wukong's Proton prefix.
+#
+# Why this exists: the launcher's OAuth redirect URI is a custom scheme
+# (readym://). The Linux browser has no idea what that is, so the login token
+# never gets back to the launcher. This forwards the URL into the launcher's
+# pressure-vessel container, where the scheme *is* registered.
+#
+# Registered as the handler for x-scheme-handler/readym by install.sh.
+#
+set -euo pipefail
+
+APPID=2358720
+LAUNCHER_WINPATH='C:\users\steamuser\AppData\Local\ReadyM.Launcher\current\ReadyM.Launcher.exe'
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/readym-uri-handler.log"
+
+mkdir -p "$(dirname "$LOG")"
+exec >>"$LOG" 2>&1
+printf '[%s] %s\n' "$(date '+%F %T')" "${1:-<no url>}"
+
+url="${1:-}"
+[ -n "$url" ] || { echo "  no url"; exit 1; }
+
+notify() { command -v notify-send >/dev/null 2>&1 && notify-send "ReadyM" "$1" || true; }
+
+# Find the pressure-vessel bus name of the running launcher container.
+bus=""
+for pid in $(pgrep -f "steam-runtime-launch-client.*App${APPID}" 2>/dev/null || true); do
+  b=$(tr '\0' '\n' < "/proc/$pid/cmdline" 2>/dev/null \
+      | grep -oE 'com\.github\.Matoking\.protontricks\.App[0-9]+[A-Za-z0-9_]*' | head -n1 || true)
+  [ -n "$b" ] && { bus="$b"; break; }
+done
+if [ -z "$bus" ]; then
+  echo "  launcher container not found"
+  notify "Abra o ReadyM Launcher primeiro, depois refaça o login."
+  exit 1
+fi
+
+runtime=$(ls -d "$HOME"/.local/share/Steam/steamapps/common/SteamLinuxRuntime_*/pressure-vessel/bin/steam-runtime-launch-client 2>/dev/null | sort -V | tail -n1 || true)
+[ -n "$runtime" ] || runtime=$(ls -d "$HOME"/.steam/steam/steamapps/common/SteamLinuxRuntime_*/pressure-vessel/bin/steam-runtime-launch-client 2>/dev/null | sort -V | tail -n1 || true)
+wine=$(ls -d "$HOME"/.cache/protontricks/proton/*/bin/wine 2>/dev/null | head -n1 || true)
+
+if [ -z "$runtime" ] || [ -z "$wine" ]; then
+  echo "  could not locate steam-runtime-launch-client ($runtime) or wine ($wine)"
+  notify "Falha ao injetar o login (runtime/wine não encontrados)."
+  exit 1
+fi
+
+echo "  bus=$bus"
+exec "$runtime" --bus-name="$bus" -- "$wine" "$LAUNCHER_WINPATH" "$url"

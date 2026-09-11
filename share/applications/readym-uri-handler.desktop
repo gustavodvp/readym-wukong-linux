@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ReadyM URI Handler
+Comment=Forwards readym:// login callbacks to the ReadyM Launcher
+Exec=@BIN@/readym-uri-handler %u
+Icon=readym-wukong
+Terminal=false
+NoDisplay=true
+MimeType=x-scheme-handler/readym;
+Categories=Network;
