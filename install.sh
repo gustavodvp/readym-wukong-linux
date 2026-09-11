@@ -15,7 +15,8 @@
 #
 # Re-running is safe (idempotent).
 #
-set -euo pipefail
+set -uo pipefail   # no -e: this script shells out to flaky things (wine, pkill,
+                   # protontricks) and handles their failures explicitly.
 
 APPID=2358720
 GAME_NAME="Black Myth: Wukong"
@@ -126,10 +127,26 @@ if [ -f "$PREFIX/$LAUNCHER_EXE_REL" ]; then
   say "ReadyM Launcher já instalado no prefixo — pulando instalador"
 else
   say "Instalando o ReadyM Launcher no prefixo (pode abrir e fechar janelas)"
-  timeout 240 pfx_run "$INSTALLER" || true
-  sleep 3
-  pkill -f 'ReadyM.Launcher' 2>/dev/null || true
-  [ -f "$PREFIX/$LAUNCHER_EXE_REL" ] || die "A instalação não produziu o ReadyM.Launcher.exe no prefixo."
+  # O instalador Velopack abre o app no fim; esperamos o .exe aparecer, depois
+  # encerramos o instalador e o app.
+  #
+  # NB: os padrões de pkill abaixo são deliberadamente estreitos. "ReadyM.Launcher"
+  # sozinho casaria com o caminho do próprio instalador (…ReadyM.Launcher-stable-
+  # Setup.exe) e mataria este script. 'ReadyM\.Launcher\.exe' (ponto literal) não.
+  ( timeout 200 "${PT_LAUNCH[@]}" --appid "$APPID" "$INSTALLER" >/dev/null 2>&1 ) &
+  ipid=$!
+  ok=0
+  for _ in $(seq 1 90); do
+    if [ -f "$PREFIX/$LAUNCHER_EXE_REL" ]; then ok=1; sleep 3; break; fi
+    kill -0 "$ipid" 2>/dev/null || break
+    sleep 2
+  done
+  pkill -f 'ReadyM\.Launcher\.exe'            2>/dev/null
+  pkill -f "protontricks-launch .*--appid $APPID" 2>/dev/null
+  pkill -f "reaper .*AppId=$APPID"            2>/dev/null
+  wait "$ipid" 2>/dev/null
+  [ "$ok" = 1 ] && [ -f "$PREFIX/$LAUNCHER_EXE_REL" ] \
+    || die "A instalação não produziu o ReadyM.Launcher.exe no prefixo."
 fi
 
 # 2) WebView2 em software (UI/cursor) ------------------------------------------
